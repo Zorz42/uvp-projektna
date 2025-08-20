@@ -13,12 +13,14 @@ class _CsesUrl:
         return _CsesUrl.PREFIX + f"stats/{problem_id}/"
 
 class CsesProblem:
-    def __init__(self, problem_id: int, title: str):
+    def __init__(self, problem_id: int, title: str, solves: int, attempts: int):
         self.problem_id = problem_id
         self.title = title
+        self.solves = solves
+        self.attempts = attempts
 
     def __repr__(self):
-        return f"CsesProblem(id={self.problem_id}, title='{self.title}')"
+        return f"CsesProblem(id={self.problem_id}, title='{self.title}', solves={self.solves}, attempts={self.attempts})"
 
 class Cses:
     def __init__(self):
@@ -39,6 +41,8 @@ class Cses:
                 link = li.find("a")
                 name = link.text.strip()
                 problem_id = link["href"].split("/")[-1]
-                problems.append(CsesProblem(int(problem_id), name))
+                detail = li.find("span", class_="detail").text.strip()
+                solves, attempts = [int(x.strip()) for x in detail.split("/")]
+                problems.append(CsesProblem(int(problem_id), name, solves, attempts))
 
         return problems
