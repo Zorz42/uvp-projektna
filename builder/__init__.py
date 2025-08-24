@@ -1,8 +1,8 @@
-from cses import Cses
+from .cses import Cses
 
-if __name__ == "__main__":
-    cses = Cses()
-    problems = cses.list_problems()
+def build():
+    cses_instance = Cses()
+    problems = cses_instance.list_problems()
 
     ratios = [(i.problem_id, i.title, i.solves / i.attempts) for i in problems]
     ratios.sort(key=lambda x: x[2], reverse=True)

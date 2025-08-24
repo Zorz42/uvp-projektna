@@ -1,4 +1,4 @@
-from fetcher import Fetcher
+from .fetcher import Fetcher
 from bs4 import BeautifulSoup
 
 class _CsesUrl:
@@ -13,14 +13,14 @@ class _CsesUrl:
         return _CsesUrl.PREFIX + f"stats/{problem_id}/"
 
 class CsesProblem:
-    def __init__(self, problem_id: int, title: str, solves: int, attempts: int):
-        self.problem_id = problem_id
+    def __init__(self, id: int, title: str, solves: int, attempts: int):
+        self.id = id
         self.title = title
         self.solves = solves
         self.attempts = attempts
 
     def __repr__(self):
-        return f"CsesProblem(id={self.problem_id}, title='{self.title}', solves={self.solves}, attempts={self.attempts})"
+        return f"CsesProblem(id={self.id}, title='{self.title}', solves={self.solves}, attempts={self.attempts})"
 
 class Cses:
     def __init__(self):
