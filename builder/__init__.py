@@ -1,34 +1,19 @@
 from .cses import Cses
+import pandas as pd
+import os
 
 def build():
     cses_instance = Cses()
     problems = cses_instance.list_problems()
 
-    ratios = [(i.problem_id, i.title, i.solves / i.attempts) for i in problems]
-    ratios.sort(key=lambda x: x[2], reverse=True)
+    ratios = [(i.id, i.title, i.solves, i.attempts, i.solves / i.attempts) for i in problems]
 
-    print()
-    print("Best solve ratios:")
-    for problem_id, title, ratio in ratios[:10]:
-        print(f"{problem_id:>4} {title:<50} {ratio:.2%}")
+    os.makedirs("data", exist_ok=True)
 
-    ratios.sort(key=lambda x: x[2], reverse=False)
-    print()
-    print("Worst solve ratios:")
-    for problem_id, title, ratio in ratios[:10]:
-        print(f"{problem_id:>4} {title:<50} {ratio:.2%}")
+    df = pd.DataFrame(ratios, columns=["id", "title", "solves", "attempts", "solve_ratio"])
 
-    solves = [(i.problem_id, i.title, i.solves) for i in problems]
-    solves.sort(key=lambda x: x[2], reverse=True)
-    print()
-    print("Most solved problems:")
-    for problem_id, title, solves_count in solves[:10]:
-        print(f"{problem_id:>4} {title:<50} {solves_count:>6} solves")
+    df.to_csv("data/cses_problems.csv", index=False, encoding="utf-8")
 
-    solves.sort(key=lambda x: x[2], reverse=False)
-    print()
-    print("Least solved problems:")
-    for problem_id, title, solves_count in solves[:10]:
-        print(f"{problem_id:>4} {title:<50} {solves_count:>6} solves")
+
 
 
