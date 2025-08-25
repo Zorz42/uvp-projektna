@@ -1,5 +1,3 @@
-import requests
-
 from .fetcher import Fetcher
 from bs4 import BeautifulSoup
 from typing import List, Tuple
@@ -18,6 +16,14 @@ class _CsesUrl:
     @staticmethod
     def login_page() -> str:
         return  _CsesUrl.PREFIX + "login/"
+
+    @staticmethod
+    def leaderboard(page: int) -> str:
+        return _CsesUrl.PREFIX + f"problemset/stats/p/{page}/"
+
+    @staticmethod
+    def user_page(user_id: int) -> str:
+        return _CsesUrl.PREFIX + f"problemset/user/{user_id}/"
 
 class CsesProblem:
     def __init__(self, problem_id: int, title: str, solves: int, attempts: int):
@@ -111,4 +117,70 @@ class Cses:
         return problems
 
     def get_username(self, user_id: int) -> str:
-        return self.user_id_to_username.get(user_id, "Unknown")
+        if user_id in self.user_id_to_username:
+            return self.user_id_to_username[user_id]
+
+        content = self.fetcher.fetch(_CsesUrl.user_page(user_id), cache_timeout = 60 * 60 * 24) # valid for 24 hours
+
+        soup = BeautifulSoup(content, "html.parser")
+
+        for h2 in soup.find_all("h2"):
+            if h2.text.startswith("Statistics for"):
+                username = h2.text.replace("Statistics for", "").strip()
+                self.user_id_to_username[user_id] = username
+                return username
+
+        assert False
+
+    def get_leaderboard(self, num_pages: int) -> List[int]:
+        """
+        Fetches the leaderboard user IDs from the first num_pages pages.
+
+        :param num_pages:
+        :return: list of user IDs
+        """
+
+        ret = []
+
+        for page in range(num_pages):
+            content = self.fetcher.fetch(_CsesUrl.leaderboard(page + 1), cache_timeout = 60 * 60 * 6) # valid for 6 hours
+            soup = BeautifulSoup(content, "html.parser")
+
+            for table in soup.find_all("table"):
+                if "summary-table" in table["class"]:
+                    continue
+                for tr in table.find_all("tr"):
+                    a = tr.find("a")
+                    if a is None:
+                        continue
+                    user_id = int(a["href"].split("/")[-2])
+                    user_name = a.text
+                    self.user_id_to_username[user_id] = user_name
+                    ret.append(user_id)
+
+        assert len(ret) == len(set(ret))
+        return ret
+
+    def get_solved_unsolved(self, user_id: int) -> Tuple[List[int], List[int]]:
+        """
+        Fetches the list of unsolved problem IDs for a given user.
+
+        :param user_id:
+        :return: list of unsolved problem IDs
+        """
+        content = self.fetcher.fetch(_CsesUrl.user_page(user_id), cache_timeout = 60 * 60 * 24) # valid for 24 hours
+        soup = BeautifulSoup(content, "html.parser")
+
+        solved = []
+        unsolved = []
+
+        for td in soup.find_all("td"):
+            for a in td.find_all("a"):
+                problem_id = int(a["href"].split("/")[-2])
+                if "full" not in a["class"]:
+                    unsolved.append(problem_id)
+                else:
+                    solved.append(problem_id)
+
+
+        return solved, unsolved
