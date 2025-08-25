@@ -32,6 +32,7 @@ class CsesProblem:
 class Cses:
     def __init__(self, username: str, password: str):
         self.fetcher = Fetcher()
+        self.user_id_to_username = {}
 
         resp = self.fetcher.session.get(_CsesUrl.login_page())
         soup = BeautifulSoup(resp.text, "html.parser")
@@ -72,6 +73,8 @@ class Cses:
             for tr in table.find_all("tr"):
                 a = tr.find_all("a")[0]
                 user_id = int(a["href"].split("/")[-1])
+                user_name = a.text
+                self.user_id_to_username[user_id] = user_name
                 for td in tr.find_all("td"):
                     if td.find("a") is not None:
                         continue
@@ -106,3 +109,6 @@ class Cses:
                 problems.append(CsesProblem(int(problem_id), name, solves, attempts))
 
         return problems
+
+    def get_username(self, user_id: int) -> str:
+        return self.user_id_to_username.get(user_id, "Unknown")
