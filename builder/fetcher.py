@@ -42,10 +42,18 @@ class Fetcher:
                 # Cache is expired, remove the old cache file
                 os.remove(cache_file)
 
-        content = requests.get(url).text
+        try:
+            content = requests.get(url).text
+            os.makedirs(self.cache_dir, exist_ok=True)
+            with open(cache_file, "w", encoding="utf-8") as f:
+                f.write(content)
+        except requests.exceptions.ConnectionError as e:
+            # If there was a connection error, just read the old file (if it exists)
 
-        os.makedirs(self.cache_dir, exist_ok=True)
-        with open(cache_file, "w", encoding="utf-8") as f:
-            f.write(content)
+            if os.path.exists(cache_file):
+                with open(cache_file, "r", encoding="utf-8") as f:
+                    return f.read()
+            else:
+                raise e
 
         return content
