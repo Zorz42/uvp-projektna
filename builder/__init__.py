@@ -50,16 +50,19 @@ def build(users: list[int]):
         for problem_id in unsolved:
             ld_score[problem_id] += 1 / len(unsolved)
 
+    # assign final score to each problem with score_problem function
     problem_score = {}
 
     for problem in problems:
         problem_score[problem.problem_id] = score_problem(problem, ld_score[problem.problem_id])
 
+    # save problems to csv
     data = [(i.problem_id, i.title, i.solves, i.attempts, i.solves / i.attempts, problem_score[i.problem_id]) for i in problems]
     df = pd.DataFrame(data, columns=["id", "title", "solves", "attempts", "solve_ratio", "score"])
 
     df.to_csv("data/cses_problems.csv", index=False, encoding="utf-8")
 
+    # fetch all problem stats (leaderboards) and map all users
     users_map = {}
 
     for problem in problems:
@@ -76,6 +79,7 @@ def build(users: list[int]):
 
     user_df.to_csv("data/cses_users.csv", index=False, encoding="utf-8")
 
+    # build leaderboard for given users
     users_leaderboard = []
 
     for user_id in users:

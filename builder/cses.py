@@ -2,6 +2,7 @@ from .fetcher import Fetcher
 from bs4 import BeautifulSoup
 from typing import List, Tuple
 
+# A Collection of URLs used in CSES
 class _CsesUrl:
     PREFIX = "https://cses.fi/"
 
@@ -25,6 +26,8 @@ class _CsesUrl:
     def user_page(user_id: int) -> str:
         return _CsesUrl.PREFIX + f"problemset/user/{user_id}/"
 
+# Represents a CSES problem with its details
+# It does not have any special functionality
 class CsesProblem:
     def __init__(self, problem_id: int, title: str, solves: int, attempts: int):
         self.problem_id = problem_id
@@ -37,6 +40,13 @@ class CsesProblem:
 
 class Cses:
     def __init__(self, username: str, password: str):
+        """
+        Initializes the Cses instance by logging in with the provided username and password.
+
+        :param username:
+        :param password:
+        :raises ValueError: If login fails due to incorrect credentials.
+        """
         self.fetcher = Fetcher()
         self.user_id_to_username = {}
 
@@ -75,6 +85,7 @@ class Cses:
         best_times = []
         best_code_sizes = []
 
+        # Find tables and extract data
         for table in tables:
             for tr in table.find_all("tr"):
                 a = tr.find_all("a")[0]
@@ -105,6 +116,7 @@ class Cses:
 
         problem_lists = soup.find_all("ul", class_="task-list")
         problems = []
+        # Extract data from the problem list
         for ul in problem_lists:
             for li in ul.find_all("li", class_="task"):
                 link = li.find("a")
@@ -117,6 +129,13 @@ class Cses:
         return problems
 
     def get_username(self, user_id: int) -> str:
+        """
+        Fetches the username for a given user ID.
+
+        :param user_id:
+        :return: username
+        :raises ValueError: If the username for the given user ID is not found.
+        """
         if user_id in self.user_id_to_username:
             return self.user_id_to_username[user_id]
 
@@ -130,7 +149,7 @@ class Cses:
                 self.user_id_to_username[user_id] = username
                 return username
 
-        assert False
+        raise ValueError(f"Username for user_id {user_id} not found.")
 
     def get_leaderboard(self, num_pages: int) -> List[int]:
         """
@@ -163,10 +182,10 @@ class Cses:
 
     def get_solved_unsolved(self, user_id: int) -> Tuple[List[int], List[int]]:
         """
-        Fetches the list of unsolved problem IDs for a given user.
+        Fetches the list of solved and unsolved problem IDs for a given user in separate lists.
 
         :param user_id:
-        :return: list of unsolved problem IDs
+        :return: list of solved and list of unsolved problem IDs
         """
         content = self.fetcher.fetch(_CsesUrl.user_page(user_id), cache_timeout = 60 * 60 * 24) # valid for 24 hours
         soup = BeautifulSoup(content, "html.parser")
